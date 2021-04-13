@@ -1,0 +1,32 @@
+################################### birth weight datasets #########################
+true_effect = rep(-99,100)
+naive_effect = rep(-99,100)
+ig_effect = rep(-99,100)
+lasso_effect = rep(-99,100)
+nmig_effect = rep(-99,100)
+
+for (i in 1:100){
+  true_effect[i] = mean(exp(simdata_bw_m100[[i]]$data$y1)-exp(simdata_bw_m100[[i]]$data$y0))
+  naive_effect[i] = effect_naiveagebmim100_rawscale[[i]]$ave_ate
+  ig_effect[i] = effect_igagebmim100_rawscale[[i]]$ave_ate
+  lasso_effect[i] = effect_lassoagebmim100_rawscale[[i]]$ave_ate
+  nmig_effect[i] = effect_nmigagebmim100_rawscale[[i]]$ave_ate
+}
+mean((true_effect - naive_effect)^2)
+mean((true_effect - ig_effect)^2)
+mean((true_effect - lasso_effect)^2)
+mean((true_effect - nmig_effect)^2)
+
+#### boxplot plot ###
+library(ggplot2)
+datagene = 100
+x = rep(c("naive","random","lasso","nmig"),each=datagene)
+y = c(naive_effect,ig_effect,lasso_effect,nmig_effect)
+df = data.frame(x,y)
+df$x = factor(x,level=c("naive","random","lasso","nmig"))
+
+ggplot(df,aes(x=x,y=y))+ 
+  geom_boxplot()+geom_hline(yintercept=mean(true_effect), linetype="solid", color = "red")+
+  geom_jitter(width=0.1,alpha=0.2)+labs(x="priors",y="estimated")+theme(axis.title.x=element_blank())+
+  geom_hline(yintercept=quantile(true_effect,probs = 0.05), linetype="dashed", color = "red")+
+  geom_hline(yintercept=quantile(true_effect,probs = 0.95), linetype="dashed", color = "red")
